@@ -61,3 +61,7 @@ CREATE TABLE `assignment_grade` (
   CONSTRAINT `FKaxh9254n4nfmxxxovn8g591y7` FOREIGN KEY (`enrollment_id`) REFERENCES `enrollment` (`id`),
   CONSTRAINT `FKph33axj4dnucgpe69qif06dlj` FOREIGN KEY (`assignment_id`) REFERENCES `assignment` (`id`)
 );
+
+get
+push
+

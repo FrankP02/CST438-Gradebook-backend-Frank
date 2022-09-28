@@ -1,6 +1,8 @@
 package com.cst438.controllers;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.sql.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -169,5 +171,71 @@ public class GradeBookController {
 		
 		return assignment;
 	}
-
+	
+	//my rest api's
+	//As an instructor for a course , I can add a new assignment for my course.  The assignment has a name and a due date.
+	private Course checkCourse(int courseId, String email) {
+		Course c = courseRepository.findById(courseId).orElse(null);
+		if (c == null) {
+			throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignment not found. "+courseId );
+		}
+		// check that user is the course instructor
+		if (!c.getInstructor().equals(email)) {
+			throw new ResponseStatusException( HttpStatus.UNAUTHORIZED, "Not Authorized. " );
+		}
+		
+		return c;
+	}
+	@PutMapping("/gradebook/course")
+	@Transactional
+	public void newAssignment (@RequestBody AssignmentListDTO.AssignmentDTO gradebook, @PathVariable("course") Integer courseId ) {
+		
+		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+		checkCourse(courseId, email);  // check that user name matches instructor email of the course.
+		
+		System.out.printf("%d %s %d\n",  gradebook.assignmentName, gradebook.dueDate, gradebook.courseId);
+		Assignment a = new Assignment();
+		a.setName(gradebook.assignmentName);
+		//convert string to type 'Date'
+		Date date1= Date.valueOf(gradebook.dueDate);;
+		a.setDueDate(date1);
+		Course c = courseRepository.findById(courseId).orElse(null);
+		a.setCourse(c);
+		
+		assignmentRepository.save(a);
+	}
+	
+	//As an instructor, I can change the name of the assignment for my course.
+	@PutMapping("/gradebook/{id}")
+	@Transactional
+	public void updateAssignmentName (@RequestBody GradebookDTO gradebook, @PathVariable("id") Integer assignmentId ) {
+		//change
+		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+		checkAssignment(assignmentId, email);  // check that user name matches instructor email of the course.
+		
+		//update the assignment name in database 
+		System.out.printf("%d %s %d\n",  gradebook.assignmentId, gradebook.assignmentName);
+		
+		/*for (GradebookDTO.Grade g : gradebook.grades) {
+			System.out.printf("%s\n", g.toString());
+			AssignmentGrade ag = assignmentGradeRepository.findById(g.assignmentGradeId).orElse(null);
+			if (ag == null) {
+				throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Invalid grade primary key. "+g.assignmentGradeId);
+			}
+			ag.setScore(g.grade);
+			System.out.printf("%s\n", ag.toString());
+			
+			assignmentGradeRepository.save(ag);
+		}*/
+	}
+	
+	//As an instructor, I can delete an assignment  for my course (only if there are no grades for the assignment).
+	
+	//delete(T entity);//<-- in CrudRepository class
+	/*
+	 * check assingment etc
+	 *  
+	 * */
+	
+	
 }
