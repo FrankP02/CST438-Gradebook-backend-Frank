@@ -13,6 +13,9 @@ public class AssignmentListDTO {
 		public String dueDate;
 		public String courseTitle;
 		public int courseId;
+		
+		public AssignmentDTO() { 
+		}
 
 		public AssignmentDTO(int assignmentId, int courseId, String assignmentName, String dueDate,
 				String courseTitle) {
@@ -65,11 +68,12 @@ public class AssignmentListDTO {
 		
 	}
 
+	//public int assignment_Id;
 	public ArrayList<AssignmentDTO> assignments = new ArrayList<>();
 
 	@Override
 	public String toString() {
-		return "AssignmentListDTO " + assignments ;
+		return "AssignmentListDTO " + assignments; //+ " assignmentId= " + assignment_Id;
 	}
 
 	@Override

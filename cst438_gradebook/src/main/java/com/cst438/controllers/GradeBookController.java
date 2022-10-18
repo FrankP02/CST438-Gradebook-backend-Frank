@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -172,6 +173,7 @@ public class GradeBookController {
 		return assignment;
 	}
 	
+	
 	//my rest api's
 	//As an instructor for a course , I can add a new assignment for my course.  The assignment has a name and a due date.
 	private Course checkCourse(int courseId, String email) {
@@ -186,56 +188,59 @@ public class GradeBookController {
 		
 		return c;
 	}
-	@PutMapping("/gradebook/course")
+	
+	@PutMapping("/gradebook/{course_id}/assignment")
 	@Transactional
-	public void newAssignment (@RequestBody AssignmentListDTO.AssignmentDTO gradebook, @PathVariable("course") Integer courseId ) {
-		
+	public void newAssignment (@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable("course_id") Integer course_Id ) {
 		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
-		checkCourse(courseId, email);  // check that user name matches instructor email of the course.
+		Course c = checkCourse(course_Id, email);  // check that user name matches instructor email of the course.
 		
-		System.out.printf("%d %s %d\n",  gradebook.assignmentName, gradebook.dueDate, gradebook.courseId);
+		System.out.printf("%s %s %s\n", adto.assignmentName, adto.dueDate, adto.courseTitle);
+		
 		Assignment a = new Assignment();
-		a.setName(gradebook.assignmentName);
-		//convert string to type 'Date'
-		Date date1= Date.valueOf(gradebook.dueDate);;
-		a.setDueDate(date1);
-		Course c = courseRepository.findById(courseId).orElse(null);
-		a.setCourse(c);
 		
+		a.setName(adto.assignmentName);
+		//convert string to type 'Date'
+		Date date1= Date.valueOf(adto.dueDate);
+		a.setDueDate(date1);
+		a.setCourse(c);
 		assignmentRepository.save(a);
 	}
 	
 	//As an instructor, I can change the name of the assignment for my course.
-	@PutMapping("/gradebook/{id}")
+	@PutMapping("/gradebook/{course_id}/{assignment_id}")
 	@Transactional
-	public void updateAssignmentName (@RequestBody GradebookDTO gradebook, @PathVariable("id") Integer assignmentId ) {
+	public void updateAssignmentName (@RequestBody AssignmentListDTO.AssignmentDTO adto, @PathVariable("course_id") int course_id,
+			@PathVariable("assignment_id") int assignment_id) {
 		//change
 		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
-		checkAssignment(assignmentId, email);  // check that user name matches instructor email of the course.
+		
 		
 		//update the assignment name in database 
-		System.out.printf("%d %s %d\n",  gradebook.assignmentId, gradebook.assignmentName);
+		//System.out.printf("%s %d\n", adto.assignment_Id, adto.assignments.size());
 		
-		/*for (GradebookDTO.Grade g : gradebook.grades) {
-			System.out.printf("%s\n", g.toString());
-			AssignmentGrade ag = assignmentGradeRepository.findById(g.assignmentGradeId).orElse(null);
+			Assignment ag = assignmentRepository.findById(assignment_id).orElse(null);
 			if (ag == null) {
-				throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Invalid grade primary key. "+g.assignmentGradeId);
+				throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Invalid assignment primary key. "+assignment_id);
 			}
-			ag.setScore(g.grade);
-			System.out.printf("%s\n", ag.toString());
-			
-			assignmentGradeRepository.save(ag);
-		}*/
+			ag.setName(adto.assignmentName);
+			//ag.setCourse(c);
+			assignmentRepository.save(ag);
 	}
 	
 	//As an instructor, I can delete an assignment  for my course (only if there are no grades for the assignment).
 	
 	//delete(T entity);//<-- in CrudRepository class
-	/*
-	 * check assingment etc
-	 *  
-	 * */
-	
-	
+	@DeleteMapping("/gradebook/{course_id}/assignment/{assignment_id}")
+	@Transactional
+	public void DeleteAssignment (@PathVariable("course_id") int course_id,
+			@PathVariable("assignment_id") int assignment_id) {		
+		Assignment a = assignmentRepository.findById(assignment_id).orElse(null);
+		if(a == null) {
+			throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Invalid assignment primary key. "+assignment_id);
+		}
+		if( a.getAssignmentGrades().size()==0) {
+			assignmentRepository.delete(a);
+		}
+	}
 }
