@@ -84,14 +84,14 @@ public class EndToEndTestSubmitGrades {
 		a.setNeedsGrading(1);
 
 //	    add a student TEST into course 99999
-		Enrollment e = new Enrollment();
-		e.setCourse(c);
-		e.setStudentEmail(TEST_USER_EMAIL);
-		e.setStudentName(TEST_STUDENT_NAME);
+		//Enrollment e = new Enrollment();
+		//e.setCourse(c);
+		//e.setStudentEmail(TEST_USER_EMAIL);
+		//e.setStudentName(TEST_STUDENT_NAME);
 
 		courseRepository.save(c);
-		a = assignmentRepository.save(a);
-		e = enrollmentRepository.save(e);
+		//assignmentRepository.save(a);
+		//e = enrollmentRepository.save(e);
 
 		AssignmentGrade ag = null;
 
@@ -125,24 +125,30 @@ public class EndToEndTestSubmitGrades {
 			* 2.  locate the element with test assignment name and click the input tag.
 			*/
 			
-			List<WebElement> elements  = driver.findElements(By.xpath("//div[@data-field='assignmentName']/div"));
-			boolean found = false;
-			for (WebElement we : elements) {
+			driver.findElement(By.xpath("//button[@id='add_assignment']")).click();//driver.findElements(By.xpath("//div[@data-field='assignmentName']/div"));
+			Thread.sleep(SLEEP_DURATION);
+
+			driver.findElement(By.xpath("//input[@name='name']")).sendKeys(a.getName());//driver.findElements(By.xpath("//div[@data-field='assignmentName']/div"));
+			driver.findElement(By.xpath("//input[@name='courseId']")).sendKeys(Integer.toString(c.getCourse_id()));//driver.findElements(By.xpath("//div[@data-field='assignmentName']/div"));
+			driver.findElement(By.xpath("//input[@name='dueDate']")).sendKeys("2022-1-1");//driver.findElements(By.xpath("//div[@data-field='assignmentName']/div"));
+
+			driver.findElement(By.xpath("//button[@id='Add']")).click();//driver.findElements(By.xpath("//div[@data-field='assignmentName']/div"));
+			Thread.sleep(SLEEP_DURATION);
+			
+			//boolean found = false;
+			/*for (WebElement we : elements) {
 				System.out.println(we.getText()); // for debug
 				if (we.getText().equals(TEST_ASSIGNMENT_NAME)) {
 					found=true;
 					we.findElement(By.xpath("descendant::input")).click();
 					break;
 				}
-			}
+			
 			assertTrue( found, "Unable to locate TEST ASSIGNMENT in list of assignments to be graded.");
-
+			
 			/*
 			 *  Locate and click Grade button to indicate to grade this assignment.
 			 */
-			
-			driver.findElement(By.xpath("//a")).click();
-			Thread.sleep(SLEEP_DURATION);
 
 			/*
 			 *  Locate row for student name "Test" and enter score of "99.9" into the grade field
@@ -150,33 +156,20 @@ public class EndToEndTestSubmitGrades {
 			 *  find the student name, then go to the grade column and enter 99.9
 			 */
 			
-			elements  = driver.findElements(By.xpath("//div[@data-field='name' and @role='cell']"));
-			for (WebElement element : elements) {
+			//elements  = driver.findElements(By.xpath("//div[@data-field='name' and @role='cell']"));
+			/*for (WebElement element : elements) {
 				System.out.println(element.getText());
 				if (element.getText().equals(TEST_STUDENT_NAME)) {
 					element.findElement(By.xpath("following-sibling::div[@data-field='grade']")).sendKeys("99.9"+Keys.ENTER);
 					Thread.sleep(SLEEP_DURATION);
 					break;
 				}
-			}
+			}*/
 			
-			/*
-			 *  Locate submit button and click
-			 */
-			driver.findElement(By.xpath("//button[@id='Submit']")).click();
+			String toast_text = driver.findElement(By.cssSelector(".Toastify__toast-body div:nth-child(2)")).getText();
 			Thread.sleep(SLEEP_DURATION);
-
-			/*
-			 *  verify that score show up in updated data grid table
-			 */
-			
-			 WebElement w = driver.findElement(By.xpath("//div[@data-field='name' and @role='cell']"));
-			 w =  w.findElement(By.xpath("following-sibling::div[@data-field='grade']"));
-			assertEquals("99.9", w.getText(), "score does not show value entered as 99.9");
-
-			// verify that assignment_grade has been added to database with score of 99.9
-			ag = assignnmentGradeRepository.findByAssignmentIdAndStudentEmail(a.getId(), TEST_USER_EMAIL);
-			assertEquals("99.9", ag.getScore());
+			System.out.println("first toast " + toast_text);
+			assertEquals(toast_text, "Added");
 
 		} catch (Exception ex) {
 			throw ex;
@@ -185,14 +178,22 @@ public class EndToEndTestSubmitGrades {
 			/*
 			 *  clean up database so the test is repeatable.
 			 */
-			ag = assignnmentGradeRepository.findByAssignmentIdAndStudentEmail(a.getId(), TEST_USER_EMAIL);
-			if (ag!=null) assignnmentGradeRepository.delete(ag);
-			enrollmentRepository.delete(e);
-			assignmentRepository.delete(a);
+			//ag = assignnmentGradeRepository.findByAssignmentIdAndStudentEmail(a.getId(), TEST_USER_EMAIL);
+			
+			System.out.println("assignment to delete" + a);
+			Assignment ab = assignmentRepository.findByCourseId(c.getCourse_id()).orElse(null);
+			assignmentRepository.delete(ab);
+			Assignment ac = assignmentRepository.findByCourseId(c.getCourse_id()).orElse(null);
+			if (ac == null) {
+				System.out.println("assignment successfully deleted");
+			}else {
+				assignmentRepository.delete(ac);
+			}
+			//enrollmentRepository.delete(e);
+			//assignmentRepository.delete(a);
 			courseRepository.delete(c);
 
 			driver.quit();
 		}
-
 	}
 }
